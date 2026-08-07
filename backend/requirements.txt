@@ -1,0 +1,2 @@
+pathspec>=0.12
+pytest>=8.0

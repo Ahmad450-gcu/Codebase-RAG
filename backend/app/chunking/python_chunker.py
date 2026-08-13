@@ -2,20 +2,10 @@ from dataclasses import dataclass
 from typing import Optional
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
+from app.chunking.common import Chunk, source_with_exclusions
 
 PY_LANGUAGE = Language(tspython.language())
 _PARSER = Parser(PY_LANGUAGE)
-
-@dataclass(frozen=True)
-class Chunk:
-    file_path: str
-    chunk_type: str          #can be function, method, class, or module level
-    name: str
-    parent_class: Optional[str]
-    language: str
-    start_line: int
-    end_line: int
-    source: str
 
 def unwrap_decorated(node):
     if node.type == "decorated_definition":
@@ -25,17 +15,6 @@ def unwrap_decorated(node):
 def node_name(def_node) -> str:
     name_node = def_node.child_by_field_name("name")
     return name_node.text.decode("utf8") if name_node else "<anonymous>"
-
-def source_with_exclusions(source_bytes: bytes, start_byte: int, end_byte: int, exclude_ranges: list[tuple[int, int]]) -> str:
-    parts = []
-    cursor = start_byte
-    for ex_start, ex_end in sorted(exclude_ranges):
-        if ex_start > cursor:
-            parts.append(source_bytes[cursor:ex_start])
-        cursor = max(cursor, ex_end)
-    if cursor < end_byte:
-        parts.append(source_bytes[cursor:end_byte])
-    return b"".join(parts).decode("utf8")
 
 def definition_chunk(file_path, range_node, def_node, source_bytes, parent_class) -> Chunk:
     return Chunk(

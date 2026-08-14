@@ -4,13 +4,14 @@ from typing import Optional
 @dataclass(frozen=True)
 class Chunk:
     file_path: str
-    chunk_type: str        
+    chunk_type: str   #can be function, method, class, or module level     
     name: str
     parent_class: Optional[str]
     language: str
     start_line: int
     end_line: int
     source: str
+    metadata: Optional[dict] = None 
 
 def source_with_exclusions(source_bytes: bytes, start_byte: int, end_byte: int, exclude_ranges: list[tuple[int, int]]) -> str:
     parts = []

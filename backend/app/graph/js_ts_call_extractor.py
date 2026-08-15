@@ -1,15 +1,12 @@
 from app.chunking.common import Chunk
-from app.chunking.python_chunker import PY_LANGUAGE
+from app.chunking.js_ts_chunker import _PARSER
 from app.graph.common import CallEdge
-from tree_sitter import Parser
-
-PARSER = Parser(PY_LANGUAGE)
 
 def text(node, source_bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode("utf8")
 
 def iter_call_nodes(node):
-    if node.type == "call":
+    if node.type == "call_expression":
         yield node
     for child in node.children:
         yield from iter_call_nodes(child)
@@ -22,20 +19,24 @@ def classify_call(call_node, source_bytes):
     if func_node.type == "identifier":
         return "plain", text(func_node, source_bytes)
 
-    if func_node.type == "attribute":
+    if func_node.type == "member_expression":
         obj_node = func_node.child_by_field_name("object")
-        attr_node = func_node.child_by_field_name("attribute")
-        if attr_node is None:
+        prop_node = func_node.child_by_field_name("property")
+        if prop_node is None:
             return None
-        method_name = text(attr_node, source_bytes)
+        method_name = text(prop_node, source_bytes)
 
-        if obj_node is not None and obj_node.type == "identifier" and text(obj_node, source_bytes) == "self":
+        if obj_node is not None and obj_node.type == "this":
             return "instance_method", method_name
 
         return "attribute", method_name
     return None
 
-def extract_intra_file_calls(file_path: str, chunks: list[Chunk]) -> list[CallEdge]:
+def extract_intra_file_calls(file_path: str, chunks: list[Chunk], language: str) -> list[CallEdge]:
+    if language not in _PARSER:
+        raise ValueError(f"Unsupported language: {language}")
+    parser = _PARSER[language]
+
     function_names = {c.name for c in chunks if c.chunk_type == "function"}
     method_keys = {(c.parent_class, c.name) for c in chunks if c.chunk_type == "method"}
 
@@ -46,7 +47,7 @@ def extract_intra_file_calls(file_path: str, chunks: list[Chunk]) -> list[CallEd
             continue
 
         source_bytes = chunk.source.encode("utf8")
-        root = PARSER.parse(source_bytes).root_node
+        root = parser.parse(source_bytes).root_node
 
         for call_node in iter_call_nodes(root):
             classification = classify_call(call_node, source_bytes)

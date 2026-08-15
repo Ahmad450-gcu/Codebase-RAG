@@ -1,15 +1,15 @@
-from app.chunking.common import Chunk
-from app.chunking.python_chunker import PY_LANGUAGE
-from app.graph.common import CallEdge
 from tree_sitter import Parser
+from app.chunking.common import Chunk
+from app.chunking.cpp_chunker import CPP_LANGUAGE
+from app.graph.common import CallEdge
 
-PARSER = Parser(PY_LANGUAGE)
+PARSER = Parser(CPP_LANGUAGE)
 
 def text(node, source_bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode("utf8")
 
 def iter_call_nodes(node):
-    if node.type == "call":
+    if node.type == "call_expression":
         yield node
     for child in node.children:
         yield from iter_call_nodes(child)
@@ -22,17 +22,18 @@ def classify_call(call_node, source_bytes):
     if func_node.type == "identifier":
         return "plain", text(func_node, source_bytes)
 
-    if func_node.type == "attribute":
-        obj_node = func_node.child_by_field_name("object")
-        attr_node = func_node.child_by_field_name("attribute")
-        if attr_node is None:
+    if func_node.type == "field_expression":
+        obj_node = func_node.child_by_field_name("argument")
+        field_node = func_node.child_by_field_name("field")
+        if field_node is None:
             return None
-        method_name = text(attr_node, source_bytes)
+        method_name = text(field_node, source_bytes)
 
-        if obj_node is not None and obj_node.type == "identifier" and text(obj_node, source_bytes) == "self":
+        if obj_node is not None and obj_node.type == "this":
             return "instance_method", method_name
 
         return "attribute", method_name
+
     return None
 
 def extract_intra_file_calls(file_path: str, chunks: list[Chunk]) -> list[CallEdge]:

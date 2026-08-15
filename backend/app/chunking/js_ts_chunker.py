@@ -5,7 +5,7 @@ from app.chunking.common import Chunk, source_with_exclusions
 
 JS_LANGUAGE = Language(tsjs.language())
 TS_LANGUAGE = Language(tsts.language_typescript())
-_PARSERS = {"javascript": Parser(JS_LANGUAGE), "typescript": Parser(TS_LANGUAGE)}
+_PARSER = {"javascript": Parser(JS_LANGUAGE), "typescript": Parser(TS_LANGUAGE)}
 _FUNCTION_VALUE_TYPES = ("arrow_function", "function_expression")
 _NAME_NODE_TYPES = ("identifier", "property_identifier", "type_identifier")
 
@@ -61,11 +61,11 @@ def class_chunks(file_path, class_node, source_bytes, language) -> list[Chunk]:
     return chunks
 
 def chunk_js_ts_file(file_path: str, source_code: str, language: str) -> list[Chunk]:
-    if language not in _PARSERS:
+    if language not in _PARSER:
         raise ValueError(f"Unsupported language: {language}")
 
     source_bytes = source_code.encode("utf8")
-    root = _PARSERS[language].parse(source_bytes).root_node
+    root = _PARSER[language].parse(source_bytes).root_node
 
     chunks: list[Chunk] = []
     top_level_ranges: list[tuple[int, int]] = []

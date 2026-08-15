@@ -12,7 +12,7 @@ def test_plain_call_resolves_within_same_file():
     assert plain_edges[0].resolved is True
     assert plain_edges[0].target_name == "helper"
 
-def test_self_method_call_resolves_within_same_class():
+def test_instance_method_call_resolves_within_same_class():
     code = '''class Greeter:
     def greet(self):
         self.helper_method()
@@ -23,7 +23,7 @@ def test_self_method_call_resolves_within_same_class():
     chunks = chunk_python_file("g.py", code)
     edges = extract_intra_file_calls("g.py", chunks)
 
-    self_edges = [e for e in edges if e.call_type == "self_method"]
+    self_edges = [e for e in edges if e.call_type == "instance_method"]
     assert len(self_edges) == 1
     assert self_edges[0].callee_name == "helper_method"
     assert self_edges[0].resolved is True
@@ -44,7 +44,7 @@ def test_self_call_to_method_not_in_file_is_unresolved():
     chunks = chunk_python_file("w.py", code)
     edges = extract_intra_file_calls("w.py", chunks)
 
-    self_edges = [e for e in edges if e.call_type == "self_method"]
+    self_edges = [e for e in edges if e.call_type == "instance_method"]
     assert len(self_edges) == 1
     assert self_edges[0].resolved is False
 

@@ -57,3 +57,16 @@ def test_node_carries_useful_attributes():
     assert attrs["chunk_type"] == "function"
     assert attrs["language"] == "python"
     assert attrs["start_line"] == 1
+
+def test_duplicate_calls_between_same_pair_collapse_to_one_edge():
+    chunks = [chunk("m.py", "a"), chunk("m.py", "b")]
+    edges = [
+        CallEdge(
+            file_path="m.py", caller_name="a", caller_parent_class=None,
+            callee_name="b", call_type="plain", resolved=True,
+            target_name="b", target_parent_class=None,
+        )
+        for _ in range(3)
+    ]
+    graph = build_graph(chunks, edges)
+    assert graph.number_of_edges() == 1

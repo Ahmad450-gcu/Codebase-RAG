@@ -11,3 +11,5 @@ class CallEdge:
     resolved: bool
     target_name: Optional[str]
     target_parent_class: Optional[str]
+    object_name: Optional[str] = None   
+    target_file: Optional[str] = None 

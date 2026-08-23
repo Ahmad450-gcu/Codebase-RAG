@@ -68,3 +68,14 @@ def iterate_import_nodes(node):
         return
     for child in node.children:
         yield from iterate_import_nodes(child)
+
+def extract_imports(source_code: str) -> list[ImportBinding]:
+    source_bytes = source_code.encode("utf8")
+    root = PARSER.parse(source_bytes).root_node
+    bindings: list[ImportBinding] = []
+    for node in iterate_import_nodes(root):
+        if node.type == "import_statement":
+            bindings.extend(handle_import_statement(node, source_bytes))
+        else:
+            bindings.extend(handle_import_from_statements(node, source_bytes))
+    return bindings

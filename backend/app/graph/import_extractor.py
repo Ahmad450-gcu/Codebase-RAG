@@ -61,3 +61,10 @@ def handle_import_from_statements(node, source_bytes) -> list[ImportBinding]:
                     imported_name= text(name_node, source_bytes),
                 ))
     return bindings
+
+def iterate_import_nodes(node):
+    if node.type in ("import_statement", "import_from_statement"):
+        yield node
+        return
+    for child in node.children:
+        yield from iterate_import_nodes(child)

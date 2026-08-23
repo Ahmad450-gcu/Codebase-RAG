@@ -34,3 +34,30 @@ def handle_import_statement(node, source_bytes) -> list[ImportBinding]:
                 imported_name=None,
                 ))
     return bindings
+
+def handle_import_from_statements(node, source_bytes) -> list[ImportBinding]:
+    import_index = next((i for i, c in enumerate(node.children) if c.type == "import"), None)
+    if import_index is None:
+        return []
+    before = node.children[:import_index]
+    if any(c.type == "relative_import" for c in before):
+        return []
+    module_node = next((c for c in before if c.type == "dotted_name"), None)
+    if module_node is None:
+        return []
+    module = text(module_node, source_bytes)
+    bindings = []
+    for child in node.children[import_index + 1:]:
+        if child.type == "dotted_name":
+            name = text(child, source_bytes)
+            bindings.append(ImportBinding(local_name=name, target_module=module, imported_name=name))
+        elif child.type == 'aliased_import':
+            name_node = next((c for c in child.children if c.type == "dotted_name"), None)
+            alias_node = next((c for c in child.children if c.type == "identifier"), None)
+            if name_node is not None and alias_node is not None:
+                bindings.append(ImportBinding(
+                    local_name= text(alias_node, source_bytes),
+                    target_module=module,
+                    imported_name= text(name_node, source_bytes),
+                ))
+    return bindings

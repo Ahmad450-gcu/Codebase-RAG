@@ -22,7 +22,8 @@ def build_graph(chunks: list[Chunk], call_edges: list[CallEdge]) -> nx.DiGraph:
         if not edge.resolved:
             continue
         caller_id = node_id(edge.file_path, edge.caller_name, edge.caller_parent_class)
-        callee_id = node_id(edge.file_path, edge.target_name, edge.target_parent_class)
+        callee_file = edge.target_file or edge.file_path
+        callee_id = node_id(callee_file, edge.target_name, edge.target_parent_class)
         if caller_id not in graph or callee_id not in graph:
             continue
         graph.add_edge(caller_id, callee_id, call_type="calls")

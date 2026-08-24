@@ -31,8 +31,9 @@ def classify_call(call_node, source_bytes):
 
         if obj_node is not None and obj_node.type == "identifier" and text(obj_node, source_bytes) == "self":
             return "instance_method", method_name
+        object_name = (text(obj_node) if obj_node is not None and obj_node.type == "identifier" else None)
 
-        return "attribute", method_name
+        return "attribute", method_name, object_name
     return None
 
 def extract_intra_file_calls(file_path: str, chunks: list[Chunk]) -> list[CallEdge]:
@@ -52,7 +53,7 @@ def extract_intra_file_calls(file_path: str, chunks: list[Chunk]) -> list[CallEd
             classification = classify_call(call_node, source_bytes)
             if classification is None:
                 continue
-            call_type, callee_name = classification
+            call_type, callee_name, object_name = classification
 
             resolved, target_name, target_parent_class = False, None, None
 
@@ -70,5 +71,6 @@ def extract_intra_file_calls(file_path: str, chunks: list[Chunk]) -> list[CallEd
                 resolved=resolved,
                 target_name=target_name,
                 target_parent_class=target_parent_class,
+                object_name= object_name,
             ))
     return edges

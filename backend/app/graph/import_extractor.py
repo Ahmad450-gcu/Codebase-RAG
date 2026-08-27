@@ -17,7 +17,7 @@ def text(node, source_bytes) -> str:
 def handle_import_statement(node, source_bytes) -> list[ImportBinding]:
     bindings = []
     for child in node.children:
-        if child.type == 'dotted-name':
+        if child.type == 'dotted_name':
             module = text(child, source_bytes)
             if '.' in module:
                 continue 

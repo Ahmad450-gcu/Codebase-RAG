@@ -20,7 +20,7 @@ def classify_call(call_node, source_bytes):
         return None
 
     if func_node.type == "identifier":
-        return "plain", text(func_node, source_bytes)
+        return "plain", text(func_node, source_bytes), None
 
     if func_node.type == "attribute":
         obj_node = func_node.child_by_field_name("object")
@@ -30,8 +30,8 @@ def classify_call(call_node, source_bytes):
         method_name = text(attr_node, source_bytes)
 
         if obj_node is not None and obj_node.type == "identifier" and text(obj_node, source_bytes) == "self":
-            return "instance_method", method_name
-        object_name = (text(obj_node) if obj_node is not None and obj_node.type == "identifier" else None)
+            return "instance_method", method_name, None
+        object_name = (text(obj_node,source_bytes) if obj_node is not None and obj_node.type == "identifier" else None)
 
         return "attribute", method_name, object_name
     return None

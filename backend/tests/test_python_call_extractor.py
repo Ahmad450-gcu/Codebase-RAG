@@ -61,3 +61,17 @@ def test_module_level_code_is_not_scanned():
     chunks = chunk_python_file("m.py", code)
     edges = extract_intra_file_calls("m.py", chunks)
     assert len(edges) == 0  
+
+def test_object_name_captured_for_single_level_attribute_call():
+    code = "def caller():\n    utils.helper()\n"
+    chunks = chunk_python_file("m.py", code)
+    edges = extract_intra_file_calls("m.py", chunks)
+    attr_edge = next(e for e in edges if e.call_type == "attribute")
+    assert attr_edge.object_name == "utils"
+
+def test_object_name_is_none_for_nested_attribute_chain():
+    code = "def caller():\n    os.path.join('a')\n"
+    chunks = chunk_python_file("m.py", code)
+    edges = extract_intra_file_calls("m.py", chunks)
+    attr_edge = next(e for e in edges if e.callee_name == "join")
+    assert attr_edge.object_name is None

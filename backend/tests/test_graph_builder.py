@@ -70,3 +70,13 @@ def test_duplicate_calls_between_same_pair_collapse_to_one_edge():
     ]
     graph = build_graph(chunks, edges)
     assert graph.number_of_edges() == 1
+
+def test_cross_file_edge_uses_target_file_for_callee_id():
+    chunks = [chunk("a.py", "caller"), chunk("b.py", "helper")]
+    edge = CallEdge(
+        file_path="a.py", caller_name="caller", caller_parent_class=None,
+        callee_name="helper", call_type="plain", resolved=True,
+        target_name="helper", target_parent_class=None, target_file="b.py",
+    )
+    graph = build_graph(chunks, [edge])
+    assert graph.has_edge(node_id("a.py", "caller"), node_id("b.py", "helper"))

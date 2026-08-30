@@ -11,8 +11,8 @@ def function_names_in_file(file_chunks: dict[str: list[Chunk]], file_path: str) 
     return function_names
 
 def resolve_python_cross_file_calls(
-        edges: list[CallEdge], file_chunks: dict[str: list[Chunk]], 
-        file_import_bindings: dict[str, list[ImportBinding]], module_index: dict[str: str]
+        edges: list[CallEdge], file_chunks: dict[str, list[Chunk]], 
+        file_import_bindings: dict[str, list[ImportBinding]], module_index: dict[str, str]
         ) -> list[CallEdge]:
     resolved_edges = []
     for edge in edges:
@@ -27,7 +27,7 @@ def resolve_python_cross_file_calls(
                 candidate = module_index.get(match.target_module)
                 if candidate and match.imported_name in function_names_in_file(file_chunks, candidate):
                     target_file = candidate
-        elif edge.call_type == 'attribure' and edge.object_name is not None:
+        elif edge.call_type == 'attribute' and edge.object_name is not None:
              match = next((b for b in bindings if b.local_name == edge.object_name and b.imported_name is None), None)
              if match is not None:
                 candidate = module_index.get(match.target_module)
@@ -37,4 +37,4 @@ def resolve_python_cross_file_calls(
              resolved_edges.append(replace(edge, resolved=True, target_name=edge.callee_name, target_parent_class=None, target_file=target_file))
         else:
             resolved_edges.append(edge)
-    return resolved_edges     
+    return resolved_edges    

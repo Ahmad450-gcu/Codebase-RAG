@@ -5,7 +5,7 @@ JS_LANGUAGE = Language(tsjs.language())
 PARSER = Parser(JS_LANGUAGE)
 
 def dump (node, source_bytes, depth=0):
-    text_preview = source_bytes[node.start_byte:node.end_byte].decode("utf-8").split('\n')[0][50]
+    text_preview = source_bytes[node.start_byte:node.end_byte].decode("utf-8").split('\n')[0][:50]
     print("  " * depth + f"{node.type}  -> {text_preview!r}")
     for child in node.children:
         dump(child, source_bytes, depth + 1)
